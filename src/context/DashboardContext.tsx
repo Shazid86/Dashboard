@@ -40,6 +40,12 @@ interface DashboardApi extends DashboardState {
   markAllNotificationsRead: () => void;
   clearNotifications: () => void;
   resetAll: () => void;
+  /**
+   * True once localStorage has been read on the client. While it is false,
+   * protected pages must render a loading skeleton — never an empty/"No Data"
+   * state — because the store may still be about to resolve.
+   */
+  hydrated: boolean;
   totals: {
     netWorth: number;
     totalBalance: number;
@@ -89,6 +95,20 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DashboardState>(load);
   const welcomeRef = useRef(false);
   const { user } = useSupabaseAuth();
+  const [hydrated, setHydrated] = useState(false);
+
+  /*
+   * First-paint hydration boundary. `load()` reads localStorage synchronously,
+   * but React still commits an initial render before effects run. Flipping
+   * `hydrated` on mount guarantees every protected page shows a skeleton for at
+   * least one frame instead of flashing an empty/"No Data" state.
+   *
+   * `load()` already swallows a private-mode/quota failure and falls back to
+   * `initialState`, so this always flips — it can never hang the UI.
+   */
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   /**
    * Live budget spending — derived from this month's expense transactions
@@ -383,9 +403,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       markAllNotificationsRead,
       clearNotifications,
       resetAll,
+      hydrated,
       totals: { netWorth, totalBalance, totalIncome, totalExpense, savingsRate, portfolioValue },
     };
-  }, [state, liveBudgets]);
+  }, [state, liveBudgets, hydrated]);
 
   return <DashboardContext.Provider value={api}>{children}</DashboardContext.Provider>;
 }

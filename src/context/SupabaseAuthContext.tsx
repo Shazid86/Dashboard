@@ -24,10 +24,18 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
-      setUser(mapUser(session?.user));
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }: { data: { session: Session | null } }) => {
+        setUser(mapUser(session?.user));
+        setLoading(false);
+      })
+      // A rejected probe must not leave `loading` stuck at true forever —
+      // every consumer would wait on a session that never arrives.
+      .catch(() => {
+        setUser(null);
+        setLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
       setUser(mapUser(session?.user));

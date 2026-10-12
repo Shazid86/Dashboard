@@ -5,6 +5,8 @@ import PageTransition from "../components/PageTransition";
 import SectionHeader from "../components/SectionHeader";
 import EmptyState from "../components/EmptyState";
 import TiltCard from "../components/TiltCard";
+import SkeletonPulse from "../components/loading/SkeletonPulse";
+import MonthlyReportCard from "../components/MonthlyReportCard";
 import { useDashboard } from "../context/DashboardContext";
 import { formatCurrency, formatDateShort } from "../lib/format";
 import TransactionFormModal from "../components/forms/TransactionFormModal";
@@ -87,7 +89,7 @@ function RangeSelector({ value, onChange }: { value: ChartRange; onChange: (r: C
 }
 
 export default function Overview({ goTo, onFilterCategory }: Props) {
-  const { totals, transactions, budgets, currency } = useDashboard();
+  const { totals, transactions, budgets, currency, hydrated } = useDashboard();
   const [openTx, setOpenTx] = useState(false);
   const [openAcc, setOpenAcc] = useState(false);
   const [openBudget, setOpenBudget] = useState(false);
@@ -139,6 +141,8 @@ export default function Overview({ goTo, onFilterCategory }: Props) {
           </div>
         </div>
       </TiltCard>
+
+      <MonthlyReportCard goTo={goTo} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <div className="hidden md:block">
@@ -242,7 +246,9 @@ export default function Overview({ goTo, onFilterCategory }: Props) {
           <span className="text-[11px] text-white/30">Range: {RANGE_OPTIONS.find((r) => r.key === range)?.label}</span>
         </div>
         <div className="mt-5">
-          {categories.length === 0 && !hasActivity ? (
+          {!hydrated ? (
+            <SkeletonPulse className="h-56 w-full" />
+          ) : categories.length === 0 && !hasActivity ? (
             <EmptyState
               icon={Receipt}
               title="No expense data yet"
@@ -272,7 +278,9 @@ export default function Overview({ goTo, onFilterCategory }: Props) {
               }
             />
             <div className="mt-4">
-              {transactions.length === 0 ? (
+              {!hydrated ? (
+                <SkeletonPulse className="h-40 w-full" />
+              ) : transactions.length === 0 ? (
                 <EmptyState
                   icon={Receipt}
                   title="No transactions yet"
@@ -327,7 +335,9 @@ export default function Overview({ goTo, onFilterCategory }: Props) {
             }
           />
           <div className="mt-4">
-            {budgets.length === 0 ? (
+            {!hydrated ? (
+              <SkeletonPulse className="h-32 w-full" />
+            ) : budgets.length === 0 ? (
               <EmptyState
                 icon={PiggyBank}
                 title="No budgets set"

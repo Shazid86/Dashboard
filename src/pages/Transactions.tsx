@@ -5,6 +5,8 @@ import PageTransition from "../components/PageTransition";
 import SectionHeader from "../components/SectionHeader";
 import EmptyState from "../components/EmptyState";
 import TiltCard from "../components/TiltCard";
+import SkeletonPulse from "../components/loading/SkeletonPulse";
+import ExportMenu from "../components/ExportMenu";
 import { useDashboard } from "../context/DashboardContext";
 import { formatCurrency, formatDate } from "../lib/format";
 import TransactionFormModal from "../components/forms/TransactionFormModal";
@@ -23,7 +25,7 @@ interface Props {
 }
 
 export default function Transactions({ categoryFilter, onClearFilter }: Props) {
-  const { transactions, accounts, removeTransaction, addTransaction, totals, currency } = useDashboard();
+  const { transactions, accounts, removeTransaction, addTransaction, totals, currency, hydrated } = useDashboard();
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
@@ -96,19 +98,22 @@ export default function Transactions({ categoryFilter, onClearFilter }: Props) {
               className="w-full bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
             />
           </div>
-          <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
-            {(["all", "income", "expense"] as Filter[]).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition",
-                  filter === f ? "bg-gold-500 text-gold-900" : "text-white/40 hover:text-white/70"
-                )}
-              >
-                {f}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+              {(["all", "income", "expense"] as Filter[]).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={cn(
+                    "rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition",
+                    filter === f ? "bg-gold-500 text-gold-900" : "text-white/40 hover:text-white/70"
+                  )}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            <ExportMenu />
           </div>
         </div>
 
@@ -128,7 +133,10 @@ export default function Transactions({ categoryFilter, onClearFilter }: Props) {
           </div>
         )}
 
-        <div className="mt-5">          {transactions.length === 0 ? (
+        <div className="mt-5">
+          {!hydrated ? (
+            <SkeletonPulse className="h-64 w-full" />
+          ) : transactions.length === 0 ? (
             <EmptyState
               icon={Receipt}
               title="No transactions yet"

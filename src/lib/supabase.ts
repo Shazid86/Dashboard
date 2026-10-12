@@ -27,5 +27,26 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // unconfigured — auth calls will simply fail until real keys are provided.
 export const supabase = createClient(
   supabaseUrl || "https://placeholder.supabase.co",
-  supabaseAnonKey || "public-anon-key-placeholder"
+  supabaseAnonKey || "public-anon-key-placeholder",
+  {
+    auth: {
+      /*
+       * ── Session persistence ──────────────────────────────────────────────
+       * These are the supabase-js defaults, restated explicitly so nobody
+       * "simplifies" them away later. They are what keeps a user signed in
+       * across reloads, app updates and PWA installs.
+       *
+       * DO NOT set `storageKey` or `storage` here. supabase-js persists to
+       * localStorage under its built-in key (sb-<project-ref>-auth-token);
+       * overriding either option would orphan the session already stored
+       * under that key and instantly log every existing user out.
+       *
+       * Also never call signOut() on startup or on a failed network probe —
+       * that is a deliberate sign-out, not a recovery.
+       */
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  }
 );

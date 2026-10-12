@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { DashboardProvider } from "./context/DashboardContext";
+import { DashboardProvider, useDashboard } from "./context/DashboardContext";
 import { ToastProvider } from "./context/ToastContext";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
@@ -15,10 +15,15 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import TransactionFormModal from "./components/forms/TransactionFormModal";
 import ThreeBackground from "./components/three/ThreeBackground";
+import OverviewSkeleton from "./components/loading/OverviewSkeleton";
+import TransactionsSkeleton from "./components/loading/TransactionsSkeleton";
+import PageSkeleton from "./components/loading/PageSkeleton";
+import PwaUpdateBanner from "./components/PwaUpdateBanner";
 
 const THEME_KEY = "aureus.theme";
 
 function DashboardShell() {
+  const { hydrated } = useDashboard();
   const [tab, setTab] = useState<TabKey>("overview");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -61,6 +66,12 @@ function DashboardShell() {
       />
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+        {/*
+         * PWA registration is production-only — `vite dev` serves no service
+         * worker. Keeping it out of main.tsx means it can live inside the
+         * React tree where the update prompt can render without a modal.
+         */}
+        {import.meta.env.PROD && <PwaUpdateBanner />}
         <Topbar
           tab={tab}
           theme={theme}
@@ -73,14 +84,39 @@ function DashboardShell() {
         <main className="relative flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-7xl">
           <AnimatePresence mode="wait">
-            {tab === "overview" && <div key="overview"><Overview goTo={setTab} onFilterCategory={filterCategory} /></div>}
-            {tab === "transactions" && <div key="transactions"><Transactions categoryFilter={txCategory} onClearFilter={() => setTxCategory(null)} /></div>}
-            {tab === "accounts" && <div key="accounts"><Accounts /></div>}
-            {tab === "budgets" && <div key="budgets"><Budgets /></div>}
-            {tab === "investments" && <div key="investments"><Investments /></div>}
-            {tab === "goals" && <div key="goals"><Goals /></div>}
-            {tab === "reports" && <div key="reports"><Reports /></div>}
-            {tab === "settings" && <div key="settings"><Settings /></div>}
+            {/*
+             * Strict loading boundary: until the store has hydrated we render a
+             * skeleton — never a page that could paint an empty/"No Data" state.
+             * The layering is: spinner (session, AuthGuard) → skeleton (data) →
+             * content. This is the single choke point for every protected tab.
+             */}
+            <div key={hydrated ? tab : "loading"}>
+              {!hydrated ? (
+                tab === "overview" ? (
+                  <OverviewSkeleton />
+                ) : tab === "transactions" ? (
+                  <TransactionsSkeleton />
+                ) : (
+                  <PageSkeleton />
+                )
+              ) : tab === "overview" ? (
+                <Overview goTo={setTab} onFilterCategory={filterCategory} />
+              ) : tab === "transactions" ? (
+                <Transactions categoryFilter={txCategory} onClearFilter={() => setTxCategory(null)} />
+              ) : tab === "accounts" ? (
+                <Accounts />
+              ) : tab === "budgets" ? (
+                <Budgets />
+              ) : tab === "investments" ? (
+                <Investments />
+              ) : tab === "goals" ? (
+                <Goals />
+              ) : tab === "reports" ? (
+                <Reports />
+              ) : (
+                <Settings />
+              )}
+            </div>
           </AnimatePresence>
 
           <footer className="mt-10 flex items-center justify-center gap-1.5 pb-4 text-[11px] text-white/20">

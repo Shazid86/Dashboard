@@ -13,7 +13,11 @@
     "@supabase/supabase-js": "^2.116.0",
     "@types/three": "^0.185.4",
     "clsx": "^2.1.1",
+    "docx": "^9.10.0",
+    "exceljs": "^4.4.0",
     "framer-motion": "^13.2.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.41.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
@@ -29,6 +33,7 @@
     "@vitejs/plugin-react": "^5.1.1",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
-    "vite": "^7.3.2"
+    "vite": "^7.3.2",
+    "vite-plugin-pwa": "^2.0.0"
   }
 }
