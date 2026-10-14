@@ -24,14 +24,24 @@ export default defineConfig({
       // data, so the refresh is offered through a toast instead (see
       // components/PwaUpdateBanner.tsx).
       registerType: "prompt",
+      /*
+       * Dev support — WITHOUT this the plugin's own guard
+       *   (ctx.devEnvironment && !ctx.options.devOptions.enabled)
+       * skips manifest injection entirely during `npm run dev`, so DevTools
+       * reports "No manifest detected" on localhost. Enabling it only exposes
+       * the manifest + its endpoint locally; service-worker REGISTRATION stays
+       * production-only because <PwaUpdateBanner /> is behind a PROD gate in
+       * App.tsx. Verified: no SW is registered in dev.
+       */
+      devOptions: { enabled: true },
       includeAssets: ["favicon.ico", "apple-touch-icon.png"],
       manifest: {
-        name: "Aureus — Personal Money Tracker",
-        short_name: "Aureus",
+        name: "AuReUs",
+        short_name: "AuReUs",
         description:
           "A premium personal finance dashboard to track your wealth, budgets, investments and goals.",
-        theme_color: "#0f172a",
-        background_color: "#0f172a",
+        theme_color: "#090d16",
+        background_color: "#090d16",
         display: "standalone",
         orientation: "portrait-primary",
         // Must stay relative to match `base` above — a leading "/" would break
